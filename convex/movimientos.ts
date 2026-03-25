@@ -1,6 +1,7 @@
-import { mutation } from "./_generated/server"
+import { mutation, query } from "./_generated/server"
 import { v } from "convex/values"
-import { query } from "./_generated/server"
+
+
 
 export const crearMovimiento = mutation({
   args: {
@@ -8,27 +9,40 @@ export const crearMovimiento = mutation({
       v.literal("ingreso"),
       v.literal("egreso"),
       v.literal("ahorro")
-
     ),
     monto: v.float64(),
     moneda: v.string(),
     proyectoId: v.optional(v.id("proyectos")),
     metaId: v.optional(v.id("metas")),
+    userId: v.id("users"),
   },
 
   handler: async (ctx, args) => {
+
     return await ctx.db.insert("movimientos", {
       ...args,
       createdAt: Date.now(),
     })
+
   },
 })
 
+
+
 export const obtenerMovimientos = query({
-  handler: async (ctx) => {
+  args: {
+    userId: v.id("users"),
+  },
+
+  handler: async (ctx, args) => {
+
     return await ctx.db
       .query("movimientos")
+      .filter(q =>
+        q.eq(q.field("userId"), args.userId)
+      )
       .order("desc")
-      .take(25);
+      .take(25)
+
   },
-});
+})

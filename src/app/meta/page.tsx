@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { eliminarMeta } from '../../../convex/metas';
+import { Id } from "@/convex/_generated/dataModel"
 import Link from "next/dist/client/link";
 type Meta = {
   nombre: string;
@@ -14,13 +15,15 @@ type Meta = {
 };
 export default function Metas() {
   const [crearNuevaMeta, setCrearNuevaMeta] = useState(false);
-  const metas = useQuery(api.metas.obtenerMetasConRecaudado)
   const [nombre, setNombre] = useState("");
   const [montoObjetivo, setMontoObjetivo] = useState(0);
   const [moneda, setMoneda] = useState("ARS");
   const [estado, setEstado] = useState("activa");
   const crearMeta = useMutation(api.metas.crearMeta);
   const eliminarMetaMutation = useMutation(api.metas.eliminarMeta);
+  const userId = localStorage.getItem("userId") as Id<"users">
+  const metas = useQuery(api.metas.obtenerMetasConRecaudado, userId ? { userId } : "skip")
+
   const guardarMeta = async () => {
 
     try {
@@ -29,8 +32,8 @@ export default function Metas() {
         nombre,
         montoObjetivo,
         moneda,
+        userId,
       })
-
       setNombre("")
       setMontoObjetivo(0)
       setCrearNuevaMeta(false)

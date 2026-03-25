@@ -2,7 +2,7 @@
 import React, { useState } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
-import { eliminarProyecto } from '../../../convex/proyectos';
+import { Id } from "@/convex/_generated/dataModel"
 import Link from "next/dist/client/link";
 interface Proyecto {
   nombre: string
@@ -14,14 +14,19 @@ const Proyectos = () => {
   const [crearNuevoProyecto, setcrearNuevoProyecto] = React.useState(false)
   const [nombre, setNombre] = React.useState("")
   const [presupuesto, setPresupuesto] = React.useState(0)
-  const proyectos = useQuery(api.proyectos.obtenerProyectosConIngresos)
   const crearProyecto = useMutation(api.proyectos.crearProyecto)
   const eliminarProyectoMutation = useMutation(api.proyectos.eliminarProyecto)
+  const userId = localStorage.getItem("userId") as Id<"users">
 
+  const proyectos = useQuery(
+    api.proyectos.obtenerProyectosConIngresos,
+    userId ? { userId } : "skip"
+  )
   const guardarProyecto = async () => {
     await crearProyecto({
       nombre,
       presupuesto,
+      userId,
     })
     setcrearNuevoProyecto(false);
     setNombre("");

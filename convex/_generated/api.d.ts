@@ -11,6 +11,7 @@
 import type * as metas from "../metas.js";
 import type * as movimientos from "../movimientos.js";
 import type * as proyectos from "../proyectos.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -22,6 +23,7 @@ declare const fullApi: ApiFromModules<{
   metas: typeof metas;
   movimientos: typeof movimientos;
   proyectos: typeof proyectos;
+  users: typeof users;
 }>;
 
 /**
