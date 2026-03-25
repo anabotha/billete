@@ -21,7 +21,7 @@ const Ingresos = () => {
     Id<"proyectos"> | Id<"metas"> | undefined
   >()
 
-  const userId = localStorage.getItem("userId") as Id<"users"> | null
+  const userId = localStorage.getItem("userId") as Id<"users">
 
   const movimientos = useQuery(
     api.movimientos.obtenerMovimientos,
