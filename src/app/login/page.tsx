@@ -19,7 +19,14 @@ export default function LoginPage() {
     const [isRegister, setIsRegister] = useState(false)
     const [error, setError] = useState("")
     const [userId, setUserId] = useState<Id<"users"> | null>(null)
+    useEffect(() => {
+        const id = localStorage.getItem("userId")
+        if (id) {
+            setUserId(id as Id<"users">)
+        }
+        router.push("/choices")
 
+    }, [])
     const handleSubmit = async () => {
 
         try {
@@ -41,14 +48,7 @@ export default function LoginPage() {
                 password,
             })
 
-            useEffect(() => {
-                const id = localStorage.getItem("userId")
-                if (id) {
-                    setUserId(id as Id<"users">)
-                }
-                router.push("/choices")
 
-            })
         } catch (e: any) {
 
             setError(e.message)
