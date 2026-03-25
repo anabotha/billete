@@ -26,6 +26,9 @@ export const crearMovimiento = mutation({
 
 export const obtenerMovimientos = query({
   handler: async (ctx) => {
-    return await ctx.db.query("movimientos").collect()
+    return await ctx.db
+      .query("movimientos")
+      .order("desc")
+      .take(25);
   },
-})
+});
