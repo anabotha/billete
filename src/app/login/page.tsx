@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation, useQuery, useAction } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 
 export default function LoginPage() {
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [isRegister, setIsRegister] = useState(false)
     const [error, setError] = useState("")
+    const [userId, setUserId] = useState<Id<"users"> | null>(null)
 
     const handleSubmit = async () => {
 
@@ -39,9 +41,14 @@ export default function LoginPage() {
                 password,
             })
 
-            localStorage.setItem("userId", user._id)
-            router.push("/choices")
+            useEffect(() => {
+                const id = localStorage.getItem("userId")
+                if (id) {
+                    setUserId(id as Id<"users">)
+                }
+                router.push("/choices")
 
+            })
         } catch (e: any) {
 
             setError(e.message)

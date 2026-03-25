@@ -6,6 +6,8 @@ import { api } from "../../../convex/_generated/api";
 import { eliminarMeta } from '../../../convex/metas';
 import { Id } from "@/convex/_generated/dataModel"
 import Link from "next/dist/client/link";
+import React, { useEffect } from "react"
+
 type Meta = {
   nombre: string;
   montoObjetivo: number;
@@ -21,13 +23,21 @@ export default function Metas() {
   const [estado, setEstado] = useState("activa");
   const crearMeta = useMutation(api.metas.crearMeta);
   const eliminarMetaMutation = useMutation(api.metas.eliminarMeta);
-  const userId = localStorage.getItem("userId") as Id<"users">
+  const [userId, setUserId] = useState<Id<"users"> | null>(null)
+  useEffect(() => {
+    const id = localStorage.getItem("userId")
+    if (id) {
+      setUserId(id as Id<"users">)
+    }
+  }, [])
   const metas = useQuery(api.metas.obtenerMetasConRecaudado, userId ? { userId } : "skip")
 
   const guardarMeta = async () => {
 
     try {
-
+      if (!userId) {
+        throw new Error("No user")
+      }
       await crearMeta({
         nombre,
         montoObjetivo,

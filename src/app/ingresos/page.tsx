@@ -6,6 +6,8 @@ import { Id } from "../../../convex/_generated/dataModel"
 
 import { obtenerMovimientos } from '../../../convex/movimientos';
 import Link from "next/dist/client/link"
+import { useEffect } from "react"
+
 interface Movimiento {
   tipo: string
   destino: string
@@ -21,8 +23,13 @@ const Ingresos = () => {
     Id<"proyectos"> | Id<"metas"> | undefined
   >()
 
-  const userId = localStorage.getItem("userId") as Id<"users">
-
+  const [userId, setUserId] = useState<Id<"users"> | null>(null)
+  useEffect(() => {
+    const id = localStorage.getItem("userId")
+    if (id) {
+      setUserId(id as Id<"users">)
+    }
+  }, [])
   const movimientos = useQuery(
     api.movimientos.obtenerMovimientos,
     userId ? { userId } : "skip"
@@ -45,6 +52,10 @@ const Ingresos = () => {
 
 
   const guardarMovimiento = async () => {
+    if (!userId) {
+      throw new Error("No user")
+    }
+
 
     await crearMovimiento({
       tipo,
@@ -112,7 +123,7 @@ const Ingresos = () => {
                 </thead>
 
                 <tbody>
-                  {movimientos.map((mov, i) => (
+                  {movimientos?.map((mov, i) => (
                     <tr key={i} className="border-t">
                       <td className="p-3">{mov.tipo}</td>
                       <td className="p-3">{mov.proyectoId ? getProyectoNombre(mov.proyectoId) : mov.metaId ? getMetaNombre(mov.metaId) : "Destino no especificado"}</td>

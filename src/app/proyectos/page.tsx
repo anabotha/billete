@@ -1,28 +1,40 @@
 'use client'
-import React, { useState } from "react"
+
+import React, { useState, useEffect } from "react"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
-import Link from "next/dist/client/link";
-interface Proyecto {
-  nombre: string
-  presupuesto: number
-  tiempo?: string
-}
+import Link from "next/link"
+import { crearProyecto } from "@/convex/proyectos"
 
 const Proyectos = () => {
-  const [crearNuevoProyecto, setcrearNuevoProyecto] = React.useState(false)
-  const [nombre, setNombre] = React.useState("")
-  const [presupuesto, setPresupuesto] = React.useState(0)
+
+  const [crearNuevoProyecto, setcrearNuevoProyecto] = useState(false)
+  const [nombre, setNombre] = useState("")
+  const [presupuesto, setPresupuesto] = useState(0)
+
   const crearProyecto = useMutation(api.proyectos.crearProyecto)
   const eliminarProyectoMutation = useMutation(api.proyectos.eliminarProyecto)
-  const userId = localStorage.getItem("userId") as Id<"users">
+
+  const [userId, setUserId] = useState<Id<"users"> | null>(null)
+
+  useEffect(() => {
+    const id = localStorage.getItem("userId")
+    if (id) {
+      setUserId(id as Id<"users">)
+    }
+  }, [])
 
   const proyectos = useQuery(
     api.proyectos.obtenerProyectosConIngresos,
     userId ? { userId } : "skip"
   )
+
+  if (!userId) return null
   const guardarProyecto = async () => {
+    if (!userId) {
+      throw new Error("No user")
+    }
     await crearProyecto({
       nombre,
       presupuesto,
