@@ -3,6 +3,7 @@ import Link from "next/link"
 
 const Choices = () => {
   const items = [
+    { title: "Dashboard", path: "/dashboard" },
     { title: "Metas", path: "/meta" },
     { title: "Ingresos", path: "/ingresos" },
     { title: "Proyectos", path: "/proyectos" },

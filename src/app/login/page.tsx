@@ -1,121 +1,146 @@
 "use client"
-
-import { useEffect, useState } from "react"
+import React, { useState, useEffect } from "react"
+import { useAction } from "convex/react"
+import { api } from "../../../convex/_generated/api"
 import { useRouter } from "next/navigation"
-import { useMutation, useQuery, useAction } from "convex/react"
-import { api } from "@/convex/_generated/api"
-import { Id } from "@/convex/_generated/dataModel"
 
 export default function LoginPage() {
+  const [isMounted, setIsMounted] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-    const router = useRouter()
-    const login = useAction(api.users.login)
-    const register = useAction(api.users.register)
+  const loginAction = useAction(api.users.login)
+  const fixPasswordHash = useAction(api.users.fixPasswordHash)
+  const router = useRouter()
 
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
+  useEffect(() => { setIsMounted(true) }, [])
 
-    const [loading, setLoading] = useState(false)
-    const [isRegister, setIsRegister] = useState(false)
-    const [error, setError] = useState("")
-    const [userId, setUserId] = useState<Id<"users"> | null>(null)
-    useEffect(() => {
-        const id = localStorage.getItem("userId")
-        if (id) {
-            setUserId(id as Id<"users">)
-        }
-        router.push("/choices")
-
-    }, [])
-    const handleSubmit = async () => {
-
-        try {
-
-            setLoading(true)
-            setError("")
-
-            if (isRegister) {
-
-                await register({
-                    email,
-                    password,
-                })
-
-            }
-
-            const user = await login({
-                email,
-                password,
-            })
-
-
-        } catch (e: any) {
-
-            setError(e.message)
-
-        } finally {
-
-            setLoading(false)
-
-        }
-
+  useEffect(() => {
+    if (!isMounted) return
+    const id = localStorage.getItem("userId")
+    if (id && id !== "null" && id !== "undefined") {
+      router.push("/choices")
     }
+  }, [isMounted])
 
-    return (
+  if (!isMounted) return null
 
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900">
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
 
-            <div className="w-full max-w-md bg-white dark:bg-zinc-900 p-8 rounded-2xl shadow space-y-4">
+    try {
+      const user = await loginAction({ email, password })
+      localStorage.setItem("userId", user._id)
+      router.push("/choices")
+    } catch (err: any) {
+      // Si el hash no es bcrypt (fue creado en plano), lo arreglamos y reintentamos
+      if (err.message?.includes("Incorrecto") || err.message?.includes("invalid")) {
+        try {
+          await fixPasswordHash({ email, password })
+          const user = await loginAction({ email, password })
+          localStorage.setItem("userId", user._id)
+          router.push("/choices")
+          return
+        } catch {
+          // fallthrough
+        }
+      }
+      setError("Email o contraseña incorrectos.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
-                <h1 className="text-2xl font-bold text-center">
-                    {isRegister ? "Registro" : "Login"}
-                </h1>
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "var(--bg)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "1.5rem"
+    }}>
+      <div style={{ width: "100%", maxWidth: 380 }}>
 
-                <input
-                    type="email"
-                    placeholder="Email"
-                    className="w-full border rounded-lg px-3 py-2 dark:bg-zinc-800"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14,
+            background: "var(--accent)", margin: "0 auto 1rem",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24
+          }}>💰</div>
+          <h1 style={{
+            fontSize: "1.375rem", fontWeight: 600,
+            letterSpacing: "-0.02em", color: "var(--text-primary)"
+          }}>Billete</h1>
+          <p style={{ fontSize: "0.875rem", color: "var(--text-tertiary)", marginTop: 4 }}>
+            Ingresá a tu cuenta
+          </p>
+        </div>
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    className="w-full border rounded-lg px-3 py-2 dark:bg-zinc-800"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+        {/* Form */}
+        <form onSubmit={handleLogin} className="card" style={{ padding: "2rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
-                {error && (
-                    <div className="text-red-500 text-sm">
-                        {error}
-                    </div>
-                )}
-
-                <button
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg"
-                >
-                    {loading
-                        ? "Cargando..."
-                        : isRegister
-                            ? "Registrarse"
-                            : "Entrar"}
-                </button>
-
-                <button
-                    onClick={() => setIsRegister(!isRegister)}
-                    className="w-full text-sm text-gray-500"
-                >
-                    {isRegister
-                        ? "Ya tengo cuenta"
-                        : "Crear cuenta"}
-                </button>
-
+            <div>
+              <label className="label" style={{ display: "block", marginBottom: 6 }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="tu@email.com"
+                required
+                autoComplete="email"
+              />
             </div>
 
-        </div>
-    )
+            <div>
+              <label className="label" style={{ display: "block", marginBottom: 6 }}>
+                Contraseña
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+
+            {error && (
+              <div style={{
+                background: "#fff0f0",
+                border: "1px solid #fecaca",
+                borderRadius: 8,
+                padding: "0.625rem 0.875rem",
+                fontSize: "0.875rem",
+                color: "var(--danger)"
+              }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading}
+              style={{ width: "100%", padding: "0.625rem", marginTop: 4 }}
+            >
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+
+          </div>
+        </form>
+
+      </div>
+    </div>
+  )
 }

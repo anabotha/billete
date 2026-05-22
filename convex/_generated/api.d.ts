@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as compromisos from "../compromisos.js";
 import type * as metas from "../metas.js";
+import type * as metricas from "../metricas.js";
 import type * as movimientos from "../movimientos.js";
 import type * as proyectos from "../proyectos.js";
 import type * as users from "../users.js";
@@ -20,7 +22,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  compromisos: typeof compromisos;
   metas: typeof metas;
+  metricas: typeof metricas;
   movimientos: typeof movimientos;
   proyectos: typeof proyectos;
   users: typeof users;

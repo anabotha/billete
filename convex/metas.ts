@@ -22,47 +22,45 @@ export const crearMeta = mutation({
   },
 })
 export const obtenerMetasConRecaudado = query({
-  args: {
-    userId: v.id("users"),
-  },
-
+  args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-
     const metas = await ctx.db
       .query("metas")
       .filter(q => q.eq(q.field("userId"), args.userId))
       .collect()
 
+    // Use index for efficiency and correctness
     const movimientos = await ctx.db
       .query("movimientos")
-      .filter(q => q.eq(q.field("userId"), args.userId))
+      .withIndex("by_user", q => q.eq("userId", args.userId))
       .collect()
 
+    // Only movimientos linked to a meta
+    const movConMeta = movimientos.filter(m => m.metaId != null)
+
     return metas.map((meta) => {
+      const linked = movConMeta.filter(m => m.metaId === meta._id)
 
-      const ahorro = movimientos
-        .filter(
-          m => m.metaId === meta._id && m.tipo === "ahorro"
-        )
+      // Sum contributions (ahorro) minus withdrawals (egreso)
+      const totalAhorro = linked
+        .filter(m => m.tipo === "ahorro")
         .reduce((t, m) => t + m.monto, 0)
 
-      const egreso = movimientos
-        .filter(
-          m => m.metaId === meta._id && m.tipo === "egreso"
-        )
+      const totalEgreso = linked
+        .filter(m => m.tipo === "egreso")
         .reduce((t, m) => t + m.monto, 0)
 
-      const recaudado = ahorro - egreso
+      const recaudado = totalAhorro - totalEgreso
 
       return {
         ...meta,
         recaudado,
-        progreso: recaudado / meta.montoObjetivo,
+        progreso: meta.montoObjetivo > 0 ? recaudado / meta.montoObjetivo : 0,
       }
-
     })
   },
 })
+
 export const obtenerMetas = query({
   args: {
     userId: v.id("users"),
